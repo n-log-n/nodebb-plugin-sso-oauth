@@ -1,11 +1,11 @@
 {
-  "name": "nodebb-plugin-sso-oauth",
+  "name": "nodebb-plugin-sso-tws",
   "version": "0.3.4",
-  "description": "NodeBB Generic OAuth SSO",
+  "description": "NodeBB Generic OAuth SSO modified to work for TWS",
   "main": "library.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth"
+    "url": "https://github.com/n-log-n/nodebb-plugin-sso-oauth"
   },
   "keywords": [
     "nodebb",
@@ -18,12 +18,12 @@
     "registration"
   ],
   "author": {
-    "name": "Julian Lam",
-    "email": "julian@nodebb.org"
+    "name": "Faisal Khan",
+    "email": ""
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth/issues"
+    "url": "https://github.com/n-log-n/nodebb-plugin-sso-oauth/issues"
   },
   "readme": "",
   "readmeFilename": "README.md",
