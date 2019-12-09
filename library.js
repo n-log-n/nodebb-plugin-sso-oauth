@@ -26,6 +26,7 @@
 	const passport = module.parent.require('passport');
 	const nconf = module.parent.require('nconf');
 	const winston = module.parent.require('winston');
+	var https = require('https');
 
 	require('https').globalAgent.options.rejectUnauthorized = false;
 
@@ -62,6 +63,8 @@
 		oauth2: {
 			authorizationURL: 'https://chatrooms.talkwithstranger.com/api/oauth2/authorize',
 			tokenURL: 'https://chatrooms.talkwithstranger.com/api/oauth2/token',
+			// authorizationURL: 'http://devnodebb.test/api/oauth2/authorize',
+			// tokenURL: 'http://devnodebb.test/api/oauth2/token',
 			clientID: nconf.get('oauth:id'),	// don't change this line
 			clientSecret: nconf.get('oauth:secret'),	// don't change this line
 		},
@@ -148,6 +151,7 @@
 					email: profile.emails[0].value,
 					banned: profile.banned,
 					isAdmin: profile.isAdmin,
+					picture: profile.picture,
 				}, function (err, user) {
 					if (err) {
 						return done(err);
@@ -186,6 +190,7 @@
 		profile.username = data.username;
 		profile.emails = [{ value: data.email }];
 		profile.banned = data.banned;
+		profile.picture = 'https://chatrooms.talkwithstranger.com/' + data.picture;
 		// Do you want to automatically make somebody an admin? This line might help you do that...
 		// profile.isAdmin = data.isAdmin ? true : false;
 
@@ -213,7 +218,12 @@
 				var success = function (uid) {
 					// Save provider-specific information to the user
 					User.setUserField(uid, constants.name + 'Id', payload.oAuthid);
+					User.setUserField(uid, 'picture', payload.picture);
+					User.setUserField(uid, 'uploadedpicture', payload.picture);
+					User.setUserField(uid, 'username', payload.username);
 					db.setObjectField(constants.name + 'Id:uid', payload.oAuthid, uid);
+
+					// console.log(payload);
 
 					if (payload.isAdmin) {
 						Groups.join('administrators', uid, function (err) {
