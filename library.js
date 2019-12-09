@@ -27,6 +27,8 @@
 	const nconf = module.parent.require('nconf');
 	const winston = module.parent.require('winston');
 
+	require('https').globalAgent.options.rejectUnauthorized = false;
+
 	/**
 	 * REMEMBER
 	 *   Never save your OAuth Key/Secret or OAuth2 ID/Secret pair in code! It could be published and leaked accidentally.
@@ -47,8 +49,9 @@
 	 */
 
 	const constants = Object.freeze({
-		type: '',	// Either 'oauth' or 'oauth2'
-		name: '',	// Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
+		type: 'oauth2',	// Either 'oauth' or 'oauth2'
+		name: 'tws',	// Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
+		scope: '0',
 		oauth: {
 			requestTokenURL: '',
 			accessTokenURL: '',
@@ -57,12 +60,12 @@
 			consumerSecret: nconf.get('oauth:secret'),	// don't change this line
 		},
 		oauth2: {
-			authorizationURL: '',
-			tokenURL: '',
+			authorizationURL: 'https://chatrooms.talkwithstranger.com/api/oauth2/authorize',
+			tokenURL: 'https://chatrooms.talkwithstranger.com/api/oauth2/token',
 			clientID: nconf.get('oauth:id'),	// don't change this line
 			clientSecret: nconf.get('oauth:secret'),	// don't change this line
 		},
-		userRoute: '',	// This is the address to your app's "user profile" API endpoint (expects JSON)
+		userRoute: 'https://chatrooms.talkwithstranger.com/secret',	// This is the address to your app's "user profile" API endpoint (expects JSON)
 	});
 
 	const OAuth = {};
@@ -114,6 +117,8 @@
 				opts.callbackURL = nconf.get('url') + '/auth/' + constants.name + '/callback';
 
 				passportOAuth.Strategy.prototype.userProfile = function (accessToken, done) {
+					this._oauth2.useAuthorizationHeaderforGET(true);
+
 					this._oauth2.get(constants.userRoute, accessToken, function (err, body/* , res */) {
 						if (err) {
 							return done(err);
@@ -139,13 +144,15 @@
 			passport.use(constants.name, new passportOAuth(opts, function (req, token, secret, profile, done) {
 				OAuth.login({
 					oAuthid: profile.id,
-					handle: profile.displayName,
+					username: profile.username,
 					email: profile.emails[0].value,
+					banned: profile.banned,
 					isAdmin: profile.isAdmin,
 				}, function (err, user) {
 					if (err) {
 						return done(err);
 					}
+
 
 					authenticationController.onSuccessfulLogin(req, user.uid);
 					done(null, user);
@@ -176,15 +183,15 @@
 
 		var profile = {};
 		profile.id = data.id;
-		profile.displayName = data.name;
+		profile.username = data.username;
 		profile.emails = [{ value: data.email }];
-
+		profile.banned = data.banned;
 		// Do you want to automatically make somebody an admin? This line might help you do that...
 		// profile.isAdmin = data.isAdmin ? true : false;
 
 		// Delete or comment out the next TWO (2) lines when you are ready to proceed
-		process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-		return callback(new Error('Congrats! So far so good -- please see server log for details'));
+		// process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
+		// return callback(new Error('Congrats! So far so good -- please see server log for details'));
 
 		// eslint-disable-next-line
 		callback(null, profile);
@@ -228,7 +235,7 @@
 
 					if (!uid) {
 						User.create({
-							username: payload.handle,
+							username: payload.username,
 							email: payload.email,
 						}, function (err, uid) {
 							if (err) {
