@@ -190,7 +190,7 @@
 		profile.username = data.username;
 		profile.emails = [{ value: data.email }];
 		profile.banned = data.banned;
-		profile.picture = 'https://chatrooms.talkwithstranger.com/' + data.picture;
+		profile.picture = data.picture;
 		// Do you want to automatically make somebody an admin? This line might help you do that...
 		// profile.isAdmin = data.isAdmin ? true : false;
 
